@@ -70,7 +70,9 @@ async fn write_png(
 #[cfg_attr(any(target_arch = "wasm32", miri), allow(unused))]
 fn add_alpha(input: &[u8]) -> Vec<u8> {
     input
-        .chunks_exact(3)
+        .as_chunks::<3>()
+        .0
+        .iter()
         .flat_map(|chunk| [chunk[0], chunk[1], chunk[2], 255])
         .collect()
 }
@@ -78,7 +80,9 @@ fn add_alpha(input: &[u8]) -> Vec<u8> {
 #[cfg_attr(any(target_arch = "wasm32", miri), allow(unused))]
 fn remove_alpha(input: &[u8]) -> Vec<u8> {
     input
-        .chunks_exact(4)
+        .as_chunks::<4>()
+        .0
+        .iter()
         .flat_map(|chunk| &chunk[0..3])
         .copied()
         .collect()

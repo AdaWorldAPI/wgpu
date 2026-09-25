@@ -80,7 +80,10 @@ pub struct Mutex<T> {
 /// For details, see [the module documentation][self].
 pub struct MutexGuard<'a, T> {
     inner: wgpu_sync::MutexGuard<'a, T>,
-    #[cfg_attr(not(miri), expect(unused))] // but `Drop` has important side effects
+    // Never read, but its `Drop` has important side effects. `allow`, not
+    // `expect`: rustc 1.98 no longer flags fields whose type implements `Drop`,
+    // so an `expect` here is unfulfilled and fails the build under -D warnings.
+    #[cfg_attr(not(miri), allow(unused))]
     saved: LockStateGuard,
 }
 

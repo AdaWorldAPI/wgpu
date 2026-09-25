@@ -266,7 +266,7 @@ impl super::Device {
                     "Naga generated shader for entry point '{}' and stage {:?}\n{}",
                     stage.entry_point,
                     naga_stage,
-                    &source
+                    source
                 );
 
                 let options = MTLCompileOptions::new();

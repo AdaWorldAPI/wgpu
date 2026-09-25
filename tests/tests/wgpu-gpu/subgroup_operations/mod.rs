@@ -114,7 +114,7 @@ static SUBGROUP_OPERATIONS: GpuTestConfiguration = GpuTestConfiguration::new()
                     writeln!(
                         &mut msg,
                         "Got from GPU:\n{:x?}\n  expected:\n{:x?}",
-                        result, &expected_array,
+                        result, expected_array,
                     )
                     .unwrap();
                     for (thread, (result, expected)) in result

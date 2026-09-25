@@ -121,19 +121,20 @@ fn collect_validation_jobs(jobs: &mut Vec<Job>, cmd: ValidateSubcommand) -> anyh
         }
         ValidateSubcommand::Hlsl(cmd) => {
             let bin;
-            let validator: fn(&Path, hlsl_snapshots::ConfigItem, &str) -> anyhow::Result<()>;
-            match cmd {
-                ValidateHlslCommand::Dxc => {
-                    bin = "dxc";
-                    which(bin)?;
-                    validator = validate_hlsl_with_dxc;
-                }
-                ValidateHlslCommand::Fxc => {
-                    bin = "fxc";
-                    which(bin)?;
-                    validator = validate_hlsl_with_fxc;
-                }
-            }
+
+            let validator: fn(&Path, hlsl_snapshots::ConfigItem, &str) -> anyhow::Result<()> =
+                match cmd {
+                    ValidateHlslCommand::Dxc => {
+                        bin = "dxc";
+                        which(bin)?;
+                        validate_hlsl_with_dxc
+                    }
+                    ValidateHlslCommand::Fxc => {
+                        bin = "fxc";
+                        which(bin)?;
+                        validate_hlsl_with_fxc
+                    }
+                };
 
             crate::glob::for_each_file(snapshots_base_out, "hlsl/*.hlsl", |path_result| {
                 try_push_job(jobs, |jobs| {

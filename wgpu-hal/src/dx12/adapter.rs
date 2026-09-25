@@ -1478,8 +1478,10 @@ fn get_adapter_pci_info(vendor_id: u32, device_id: u32) -> String {
         }
 
         let hardware_id_u16: Vec<u16> = hardware_id_buffer
-            .chunks_exact(2)
-            .map(|chunk| u16::from_le_bytes([chunk[0], chunk[1]]))
+            .as_chunks::<2>()
+            .0
+            .iter()
+            .map(|&chunk| u16::from_le_bytes(chunk))
             .collect();
         let hardware_ids: Vec<String> = hardware_id_u16
             .split(|&c| c == 0)

@@ -150,13 +150,12 @@ impl<'source> Lowerer<'source, '_> {
         // above can have mutable access to the type arena.
         let constructor = constructor.borrow_inner(ctx.module);
 
-        let expr;
-        match (components, constructor) {
+        let expr = match (components, constructor) {
             // Zero-value constructor with explicit type.
             (Components::None, Constructor::Type((result_ty, inner)))
                 if inner.is_constructible(&ctx.module.types) =>
             {
-                expr = crate::Expression::ZeroValue(result_ty);
+                crate::Expression::ZeroValue(result_ty)
             }
             // Zero-value constructor, vector with type inference
             (Components::None, Constructor::PartialVector { size }) => {
@@ -173,7 +172,7 @@ impl<'source> Lowerer<'source, '_> {
                     },
                     span,
                 );
-                expr = crate::Expression::ZeroValue(result_ty);
+                crate::Expression::ZeroValue(result_ty)
             }
             // Zero-value constructor, matrix or array with type inference
             (Components::None, Constructor::PartialMatrix { .. } | Constructor::PartialArray) => {
@@ -190,13 +189,11 @@ impl<'source> Lowerer<'source, '_> {
                     ..
                 },
                 Constructor::Type((_, &crate::TypeInner::Scalar(scalar))),
-            ) => {
-                expr = crate::Expression::As {
-                    expr: component,
-                    kind: scalar.kind,
-                    convert: Some(scalar.width),
-                };
-            }
+            ) => crate::Expression::As {
+                expr: component,
+                kind: scalar.kind,
+                convert: Some(scalar.width),
+            },
 
             // Vector conversion (vector -> vector)
             (
@@ -212,13 +209,11 @@ impl<'source> Lowerer<'source, '_> {
                         scalar: dst_scalar,
                     },
                 )),
-            ) if dst_size == src_size => {
-                expr = crate::Expression::As {
-                    expr: component,
-                    kind: dst_scalar.kind,
-                    convert: Some(dst_scalar.width),
-                };
-            }
+            ) if dst_size == src_size => crate::Expression::As {
+                expr: component,
+                kind: dst_scalar.kind,
+                convert: Some(dst_scalar.width),
+            },
 
             // Vector conversion (vector -> vector) - partial
             (
@@ -255,13 +250,11 @@ impl<'source> Lowerer<'source, '_> {
                         scalar: dst_scalar,
                     },
                 )),
-            ) if dst_columns == src_columns && dst_rows == src_rows => {
-                expr = crate::Expression::As {
-                    expr: component,
-                    kind: dst_scalar.kind,
-                    convert: Some(dst_scalar.width),
-                };
-            }
+            ) if dst_columns == src_columns && dst_rows == src_rows => crate::Expression::As {
+                expr: component,
+                kind: dst_scalar.kind,
+                convert: Some(dst_scalar.width),
+            },
 
             // Matrix conversion (matrix -> matrix) - partial
             (
@@ -294,12 +287,10 @@ impl<'source> Lowerer<'source, '_> {
                     ..
                 },
                 Constructor::PartialVector { size },
-            ) => {
-                expr = crate::Expression::Splat {
-                    size,
-                    value: component,
-                };
-            }
+            ) => crate::Expression::Splat {
+                size,
+                value: component,
+            },
 
             // Vector constructor (splat)
             (
@@ -333,10 +324,10 @@ impl<'source> Lowerer<'source, '_> {
                     core::slice::from_mut(&mut component),
                     vec_scalar,
                 )?;
-                expr = crate::Expression::Splat {
+                crate::Expression::Splat {
                     size,
                     value: component,
-                };
+                }
             }
 
             // Vector constructor (by elements), partial
@@ -355,7 +346,7 @@ impl<'source> Lowerer<'source, '_> {
                 ctx.convert_slice_to_common_leaf_scalar(&mut components, consensus_scalar)?;
                 let inner = consensus_scalar.to_inner_vector(size);
                 let ty = ctx.ensure_type_exists(inner);
-                expr = crate::Expression::Compose { ty, components };
+                crate::Expression::Compose { ty, components }
             }
 
             // Vector constructor (by elements), full type given
@@ -364,7 +355,7 @@ impl<'source> Lowerer<'source, '_> {
                 Constructor::Type((ty, &crate::TypeInner::Vector { scalar, .. })),
             ) => {
                 ctx.try_automatic_conversions_for_vector(&mut components, scalar, ty_span)?;
-                expr = crate::Expression::Compose { ty, components };
+                crate::Expression::Compose { ty, components }
             }
 
             // Matrix constructor (by elements), partial
@@ -404,7 +395,7 @@ impl<'source> Lowerer<'source, '_> {
                     rows,
                     scalar: consensus_scalar,
                 });
-                expr = crate::Expression::Compose { ty, components };
+                crate::Expression::Compose { ty, components }
             }
 
             // Matrix constructor (by elements), type given
@@ -441,7 +432,7 @@ impl<'source> Lowerer<'source, '_> {
                     rows,
                     scalar,
                 });
-                expr = crate::Expression::Compose { ty, components };
+                crate::Expression::Compose { ty, components }
             }
 
             // Matrix constructor (by columns), partial
@@ -476,7 +467,7 @@ impl<'source> Lowerer<'source, '_> {
                     rows,
                     scalar: consensus_scalar,
                 });
-                expr = crate::Expression::Compose { ty, components };
+                crate::Expression::Compose { ty, components }
             }
 
             // Matrix constructor (by columns), type given
@@ -497,7 +488,7 @@ impl<'source> Lowerer<'source, '_> {
                     &Tr::Value(component_ty),
                     ty_span,
                 )?;
-                expr = crate::Expression::Compose { ty, components };
+                crate::Expression::Compose { ty, components }
             }
 
             // Array constructor - infer type
@@ -549,7 +540,7 @@ impl<'source> Lowerer<'source, '_> {
                 };
                 let ty = ctx.ensure_type_exists(inner);
 
-                expr = crate::Expression::Compose { ty, components };
+                crate::Expression::Compose { ty, components }
             }
 
             // Array constructor, explicit type.
@@ -559,7 +550,7 @@ impl<'source> Lowerer<'source, '_> {
             ) if inner.is_constructible(&ctx.module.types) => {
                 let mut components = components.into_components_vec();
                 ctx.try_automatic_conversions_slice(&mut components, &Tr::Handle(base), ty_span)?;
-                expr = crate::Expression::Compose { ty, components };
+                crate::Expression::Compose { ty, components }
             }
 
             // Struct constructor
@@ -579,7 +570,7 @@ impl<'source> Lowerer<'source, '_> {
                     *component =
                         ctx.try_automatic_conversions(*component, &Tr::Handle(ty), struct_ty_span)?;
                 }
-                expr = crate::Expression::Compose { ty, components };
+                crate::Expression::Compose { ty, components }
             }
 
             // ERRORS
@@ -616,7 +607,7 @@ impl<'source> Lowerer<'source, '_> {
 
             // Other types can't be constructed
             _ => return Err(Box::new(Error::TypeNotConstructible(ty_span))),
-        }
+        };
 
         let expr = ctx.append_expression(expr, span)?;
         Ok(expr)

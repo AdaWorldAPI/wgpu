@@ -2464,17 +2464,15 @@ impl crate::Device for super::Device {
     ) -> crate::AccelerationStructureBuildSizes {
         let mut geometry_desc;
         let device5 = self.raw.cast::<Direct3D12::ID3D12Device5>().unwrap();
-        let ty;
-        let inputs0;
-        let num_desc;
-        match desc.entries {
-            AccelerationStructureEntries::Instances(instances) => {
-                ty = Direct3D12::D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
-                inputs0 = Direct3D12::D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS_0 {
+
+        let (ty, inputs0, num_desc) = match desc.entries {
+            AccelerationStructureEntries::Instances(instances) => (
+                Direct3D12::D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL,
+                Direct3D12::D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS_0 {
                     InstanceDescs: 0,
-                };
-                num_desc = instances.count;
-            }
+                },
+                instances.count,
+            ),
             AccelerationStructureEntries::Triangles(triangles) => {
                 geometry_desc = Vec::with_capacity(triangles.len());
                 for triangle in triangles {
@@ -2531,11 +2529,13 @@ impl crate::Device for super::Device {
                         },
                     })
                 }
-                ty = Direct3D12::D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL;
-                inputs0 = Direct3D12::D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS_0 {
-                    pGeometryDescs: geometry_desc.as_ptr(),
-                };
-                num_desc = geometry_desc.len() as u32;
+                (
+                    Direct3D12::D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL,
+                    Direct3D12::D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS_0 {
+                        pGeometryDescs: geometry_desc.as_ptr(),
+                    },
+                    geometry_desc.len() as u32,
+                )
             }
             AccelerationStructureEntries::AABBs(aabbs) => {
                 geometry_desc = Vec::with_capacity(aabbs.len());
@@ -2555,11 +2555,13 @@ impl crate::Device for super::Device {
                         },
                     })
                 }
-                ty = Direct3D12::D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL;
-                inputs0 = Direct3D12::D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS_0 {
-                    pGeometryDescs: geometry_desc.as_ptr(),
-                };
-                num_desc = geometry_desc.len() as u32;
+                (
+                    Direct3D12::D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL,
+                    Direct3D12::D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS_0 {
+                        pGeometryDescs: geometry_desc.as_ptr(),
+                    },
+                    geometry_desc.len() as u32,
+                )
             }
         };
         let acceleration_structure_inputs =

@@ -1942,21 +1942,21 @@ impl Texture {
                     });
                 }
             }
-            wgt::TextureViewDimension::CubeArray => {
-                if !resolved_array_layer_count.is_multiple_of(6) {
-                    return Err(CreateTextureViewError::InvalidCubemapArrayTextureDepth {
-                        depth: resolved_array_layer_count,
-                    });
-                }
+            wgt::TextureViewDimension::CubeArray
+                if !resolved_array_layer_count.is_multiple_of(6) =>
+            {
+                return Err(CreateTextureViewError::InvalidCubemapArrayTextureDepth {
+                    depth: resolved_array_layer_count,
+                });
             }
             _ => {}
         }
 
         match resolved_dimension {
-            wgt::TextureViewDimension::Cube | wgt::TextureViewDimension::CubeArray => {
-                if self.desc.size.width != self.desc.size.height {
-                    return Err(CreateTextureViewError::InvalidCubeTextureViewSize);
-                }
+            wgt::TextureViewDimension::Cube | wgt::TextureViewDimension::CubeArray
+                if self.desc.size.width != self.desc.size.height =>
+            {
+                return Err(CreateTextureViewError::InvalidCubeTextureViewSize);
             }
             _ => {}
         }

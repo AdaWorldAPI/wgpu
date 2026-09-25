@@ -126,7 +126,7 @@ fn choose_config(
         attributes.clear();
         let mut surface_type = 0;
         for &(_, tier_attr) in tiers[..=tier_max].iter() {
-            for attribute in tier_attr.chunks_exact(2) {
+            for attribute in tier_attr.as_chunks::<2>().0 {
                 if attribute[0] == khronos_egl::SURFACE_TYPE {
                     surface_type |= attribute[1];
                 } else {
