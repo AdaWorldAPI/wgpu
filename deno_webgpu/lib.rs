@@ -343,20 +343,20 @@ fn get_data_slice<'a>(
   {
     let len = typed_array.length();
     // Avoid panicking as data of zero length array is `None`.
-    if len == 0 {
-      (EMPTY, 1)
-    } else {
-      let bpe = typed_array.byte_length() / len;
-      let byte_offset = typed_array.byte_offset();
-      let byte_len = typed_array.byte_length();
-      let ab = typed_array.buffer(scope).unwrap();
-      // SAFETY: Pointer is non-null, and V8 guarantees that the
-      // byte_offset is within the buffer backing store.
-      let ptr = unsafe { ab.data().unwrap().as_ptr().add(byte_offset) };
-      let buf =
+    match typed_array.byte_length().checked_div(len) {
+      None => (EMPTY, 1),
+      Some(bpe) => {
+        let byte_offset = typed_array.byte_offset();
+        let byte_len = typed_array.byte_length();
+        let ab = typed_array.buffer(scope).unwrap();
+        // SAFETY: Pointer is non-null, and V8 guarantees that the
+        // byte_offset is within the buffer backing store.
+        let ptr = unsafe { ab.data().unwrap().as_ptr().add(byte_offset) };
+        let buf =
           // SAFETY: the slice is within the bounds of the backing store
           unsafe { std::slice::from_raw_parts(ptr as *const u8, byte_len) };
-      (buf, bpe)
+        (buf, bpe)
+      }
     }
   } else if let Ok(ab) = v8::Local::<v8::ArrayBuffer>::try_from(data_arg) {
     let byte_len = ab.byte_length();

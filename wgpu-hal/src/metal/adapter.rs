@@ -1371,12 +1371,6 @@ impl super::CapabilitiesQuery {
             self.format_bc || (self.format_eac_etc && self.format_astc),
         );
 
-        let max_storage_buffers_per_shader_stage;
-        let max_uniform_buffers_per_shader_stage;
-        let max_vertex_buffers;
-        let max_acceleration_structures_per_shader_stage;
-        let max_buffers_and_acceleration_structures_per_shader_stage;
-
         // Metal has a single buffer limit that we must split across 3 WebGPU limits:
         //  - maxStorageBuffersPerShaderStage; must be at least 8
         //  - maxUniformBuffersPerShaderStage; must be at least 12
@@ -1384,20 +1378,24 @@ impl super::CapabilitiesQuery {
         // We also have to reserve 2 additional internal buffers:
         //  - one for immediate data
         //  - one for sizes of other buffers
-        if instance_flags.contains(wgt::InstanceFlags::STRICT_WEBGPU_COMPLIANCE) {
-            max_storage_buffers_per_shader_stage = 9;
-            max_uniform_buffers_per_shader_stage = 12;
-            max_vertex_buffers = 8;
-            max_acceleration_structures_per_shader_stage = 0;
-            max_buffers_and_acceleration_structures_per_shader_stage = u32::MAX;
+        let (
+            max_storage_buffers_per_shader_stage,
+            max_uniform_buffers_per_shader_stage,
+            max_vertex_buffers,
+            max_acceleration_structures_per_shader_stage,
+            max_buffers_and_acceleration_structures_per_shader_stage,
+        ) = if instance_flags.contains(wgt::InstanceFlags::STRICT_WEBGPU_COMPLIANCE) {
+            (9, 12, 8, 0, u32::MAX)
         } else {
             const MAX_USABLE_BUFFERS: u32 = MAX_BUFFERS - 2;
-            max_storage_buffers_per_shader_stage = MAX_USABLE_BUFFERS;
-            max_uniform_buffers_per_shader_stage = MAX_USABLE_BUFFERS;
-            max_vertex_buffers = MAX_USABLE_BUFFERS;
-            max_acceleration_structures_per_shader_stage = MAX_USABLE_BUFFERS;
-            max_buffers_and_acceleration_structures_per_shader_stage = MAX_USABLE_BUFFERS;
-        }
+            (
+                MAX_USABLE_BUFFERS,
+                MAX_USABLE_BUFFERS,
+                MAX_USABLE_BUFFERS,
+                MAX_USABLE_BUFFERS,
+                MAX_USABLE_BUFFERS,
+            )
+        };
 
         let limits = crate::auxil::adjust_raw_limits(wgt::Limits {
             //
