@@ -20,12 +20,12 @@ env:
   #
 
   # This is the MSRV used by all repository infrastructure.
-  REPO_MSRV: "1.93"
+  REPO_MSRV: "1.98.1"
   # This is the MSRV used by `wgpu` itself.
-  WGPU_MSRV: "1.87"
+  WGPU_MSRV: "1.98.1"
   # This is the MSRV used by the `wgpu-core`, `wgpu-hal`, `wgpu-sync`, and `wgpu-types` crates,
   # to ensure that they can be used with firefox.
-  CORE_MSRV: "1.87"
+  CORE_MSRV: "1.98.1"
 
   #
   # Build and test configuration

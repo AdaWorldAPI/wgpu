@@ -9,7 +9,7 @@ keywords.workspace = true
 license.workspace = true
 
 # Match the MSRV of naga and wgpu-types so this crate is usable everywhere they are.
-rust-version = "1.87"
+rust-version = "1.98.1"
 
 [dependencies]
 naga = { workspace = true }
