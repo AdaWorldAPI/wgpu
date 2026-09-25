@@ -235,11 +235,9 @@ impl crate::framework::Example for Example {
                         self.rebuild_bundle = true;
                     }
                 }
-                Key::Named(NamedKey::ArrowRight) => {
-                    if self.sample_count == 1 {
-                        self.sample_count = self.max_sample_count;
-                        self.rebuild_bundle = true;
-                    }
+                Key::Named(NamedKey::ArrowRight) if self.sample_count == 1 => {
+                    self.sample_count = self.max_sample_count;
+                    self.rebuild_bundle = true;
                 }
                 _ => {}
             },

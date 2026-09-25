@@ -765,6 +765,12 @@ impl<'source, 'temp, 'out> ExpressionContext<'source, 'temp, 'out> {
     /// [`TypeResolution`]: proc::TypeResolution
     /// [`register_type`]: Self::register_type
     /// [`Typifier`]: Typifier
+    #[expect(
+        clippy::needless_late_init,
+        reason = "moving `self.const_typifier` into a tuple literal alongside \
+                  `&self.module.global_expressions` fails borrowck; the late-init \
+                  form keeps the disjoint-field borrows separate"
+    )]
     fn grow_types(&mut self, handle: Handle<ir::Expression>) -> Result<'source, &mut Self> {
         let empty_arena = Arena::new();
         let resolve_ctx;
@@ -1512,9 +1518,7 @@ impl<'source, 'temp> Lowerer<'source, 'temp> {
         abstract_rule: AbstractRule,
         ectx: &mut ExpressionContext<'source, '_, '_>,
     ) -> Result<'source, (Handle<ir::Type>, Option<Handle<ir::Expression>>)> {
-        let ty;
-        let initializer;
-        match (init, explicit_ty) {
+        let (ty, initializer) = match (init, explicit_ty) {
             (Some(init), Some(explicit_ty)) => {
                 let init = self.expression_for_abstract(init, ectx)?;
                 let ty_res = proc::TypeResolution::Handle(explicit_ty);
@@ -1540,23 +1544,18 @@ impl<'source, 'temp> Lowerer<'source, 'temp> {
                         got: ectx.type_to_string(init_ty),
                     }));
                 }
-                ty = explicit_ty;
-                initializer = Some(init);
+                (explicit_ty, Some(init))
             }
             (Some(init), None) => {
                 let mut init = self.expression_for_abstract(init, ectx)?;
                 if let AbstractRule::Concretize = abstract_rule {
                     init = ectx.concretize(init)?;
                 }
-                ty = ectx.register_type(init)?;
-                initializer = Some(init);
+                (ectx.register_type(init)?, Some(init))
             }
-            (None, Some(explicit_ty)) => {
-                ty = explicit_ty;
-                initializer = None;
-            }
+            (None, Some(explicit_ty)) => (explicit_ty, None),
             (None, None) => return Err(Box::new(Error::DeclMissingTypeAndInit(name.span))),
-        }
+        };
         Ok((ty, initializer))
     }
 
@@ -4409,46 +4408,33 @@ impl<'source, 'temp> Lowerer<'source, 'temp> {
             .then(|| self.expression(args.next()?, ctx))
             .transpose()?;
 
-        let level;
-        let depth_ref;
-        match fun {
-            Texture::Gather => {
-                level = ir::SampleLevel::Zero;
-                depth_ref = None;
-            }
+        let (level, depth_ref) = match fun {
+            Texture::Gather => (ir::SampleLevel::Zero, None),
             Texture::GatherCompare => {
                 let reference =
                     self.expression_with_leaf_scalar(args.next()?, ir::Scalar::F32, ctx)?;
-                level = ir::SampleLevel::Zero;
-                depth_ref = Some(reference);
+                (ir::SampleLevel::Zero, Some(reference))
             }
 
-            Texture::Sample => {
-                level = ir::SampleLevel::Auto;
-                depth_ref = None;
-            }
+            Texture::Sample => (ir::SampleLevel::Auto, None),
             Texture::SampleBias => {
                 let bias = self.expression_with_leaf_scalar(args.next()?, ir::Scalar::F32, ctx)?;
-                level = ir::SampleLevel::Bias(bias);
-                depth_ref = None;
+                (ir::SampleLevel::Bias(bias), None)
             }
             Texture::SampleCompare => {
                 let reference =
                     self.expression_with_leaf_scalar(args.next()?, ir::Scalar::F32, ctx)?;
-                level = ir::SampleLevel::Auto;
-                depth_ref = Some(reference);
+                (ir::SampleLevel::Auto, Some(reference))
             }
             Texture::SampleCompareLevel => {
                 let reference =
                     self.expression_with_leaf_scalar(args.next()?, ir::Scalar::F32, ctx)?;
-                level = ir::SampleLevel::Zero;
-                depth_ref = Some(reference);
+                (ir::SampleLevel::Zero, Some(reference))
             }
             Texture::SampleGrad => {
                 let x = self.expression_with_leaf_scalar(args.next()?, ir::Scalar::F32, ctx)?;
                 let y = self.expression_with_leaf_scalar(args.next()?, ir::Scalar::F32, ctx)?;
-                level = ir::SampleLevel::Gradient { x, y };
-                depth_ref = None;
+                (ir::SampleLevel::Gradient { x, y }, None)
             }
             Texture::SampleLevel => {
                 let exact = match class {
@@ -4469,13 +4455,9 @@ impl<'source, 'temp> Lowerer<'source, 'temp> {
                         self.expression(args.next()?, ctx)?
                     }
                 };
-                level = ir::SampleLevel::Exact(exact);
-                depth_ref = None;
+                (ir::SampleLevel::Exact(exact), None)
             }
-            Texture::SampleBaseClampToEdge => {
-                level = crate::SampleLevel::Zero;
-                depth_ref = None;
-            }
+            Texture::SampleBaseClampToEdge => (crate::SampleLevel::Zero, None),
         };
 
         let offset = args

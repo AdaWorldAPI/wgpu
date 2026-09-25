@@ -652,12 +652,12 @@ impl VaryingContext<'_> {
                     | Bi::VertexCount
                     | Bi::PrimitiveCount
                     | Bi::Vertices
-                    | Bi::Primitives => {
-                        if !self.capabilities.contains(Capabilities::MESH_SHADER) {
-                            return Err(VaryingError::UnsupportedCapability(
-                                Capabilities::MESH_SHADER,
-                            ));
-                        }
+                    | Bi::Primitives
+                        if !self.capabilities.contains(Capabilities::MESH_SHADER) =>
+                    {
+                        return Err(VaryingError::UnsupportedCapability(
+                            Capabilities::MESH_SHADER,
+                        ));
                     }
                     _ => (),
                 }
@@ -1048,15 +1048,13 @@ impl super::Validator {
                                 | crate::StorageFormat::Rgba16Unorm
                                 | crate::StorageFormat::Rgba16Snorm,
                             ..
-                        } => {
-                            if !self
-                                .capabilities
-                                .contains(Capabilities::STORAGE_TEXTURE_16BIT_NORM_FORMATS)
-                            {
-                                return Err(GlobalVariableError::UnsupportedCapability(
-                                    Capabilities::STORAGE_TEXTURE_16BIT_NORM_FORMATS,
-                                ));
-                            }
+                        } if !self
+                            .capabilities
+                            .contains(Capabilities::STORAGE_TEXTURE_16BIT_NORM_FORMATS) =>
+                        {
+                            return Err(GlobalVariableError::UnsupportedCapability(
+                                Capabilities::STORAGE_TEXTURE_16BIT_NORM_FORMATS,
+                            ));
                         }
                         _ => {}
                     },

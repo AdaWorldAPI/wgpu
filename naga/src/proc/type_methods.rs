@@ -549,13 +549,9 @@ impl crate::TypeInner {
         // constructors applied to those scalar types (e.g., never scalar to
         // `vec4`, or `vec2` to `vec3`). So first we check that the type
         // constructors match, extracting the leaf scalar types in the process.
-        let expr_scalar;
-        let goal_scalar;
-        match (self, goal) {
-            (&Ti::Scalar(expr), &Ti::Scalar(goal)) => {
-                expr_scalar = expr;
-                goal_scalar = goal;
-            }
+
+        let (expr_scalar, goal_scalar) = match (self, goal) {
+            (&Ti::Scalar(expr), &Ti::Scalar(goal)) => (expr, goal),
             (
                 &Ti::Vector {
                     size: expr_size,
@@ -565,10 +561,7 @@ impl crate::TypeInner {
                     size: goal_size,
                     scalar: goal,
                 },
-            ) if expr_size == goal_size => {
-                expr_scalar = expr;
-                goal_scalar = goal;
-            }
+            ) if expr_size == goal_size => (expr, goal),
             (
                 &Ti::Matrix {
                     rows: expr_rows,
@@ -580,10 +573,7 @@ impl crate::TypeInner {
                     columns: goal_columns,
                     scalar: goal,
                 },
-            ) if expr_rows == goal_rows && expr_columns == goal_columns => {
-                expr_scalar = expr;
-                goal_scalar = goal;
-            }
+            ) if expr_rows == goal_rows && expr_columns == goal_columns => (expr, goal),
             (
                 &Ti::Array {
                     base: expr_base,
@@ -601,7 +591,7 @@ impl crate::TypeInner {
                     .automatically_converts_to(&types[goal_base].inner, types);
             }
             _ => return None,
-        }
+        };
 
         match (expr_scalar.kind, goal_scalar.kind) {
             (Sk::AbstractFloat, Sk::Float) => {}

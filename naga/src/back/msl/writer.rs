@@ -2739,7 +2739,7 @@ impl<W: Write> Writer<W> {
                 };
 
                 match fun {
-                    Mf::ReverseBits | Mf::ExtractBits | Mf::InsertBits => {
+                    Mf::ReverseBits | Mf::ExtractBits | Mf::InsertBits
                         // reverse_bits is listed as requiring MSL 2.1 but that
                         // is a copy/paste error. Looking at previous snapshots
                         // on web.archive.org it's present in MSL 1.2.
@@ -2748,10 +2748,9 @@ impl<W: Write> Writer<W> {
                         // also talks about MSL 1.2 adding "New integer
                         // functions to extract, insert, and reverse bits, as
                         // described in Integer Functions."
-                        if context.lang_version < (1, 2) {
+                        if context.lang_version < (1, 2) => {
                             return Err(Error::UnsupportedFunction(fun_name.to_string()));
                         }
-                    }
                     _ => {}
                 }
 
@@ -8222,10 +8221,8 @@ template <typename A>
                                     )?;
                                     continue;
                                 }
-                                Some(crate::Binding::Location { .. }) => {
-                                    if has_varyings {
-                                        write!(self.out, "{varyings_member_name}.")?;
-                                    }
+                                Some(crate::Binding::Location { .. }) if has_varyings => {
+                                    write!(self.out, "{varyings_member_name}.")?;
                                 }
                                 _ => (),
                             }
@@ -8254,17 +8251,17 @@ template <typename A>
                             )?;
                         }
                         Some(crate::Binding::Location { .. })
-                        | Some(crate::Binding::BuiltIn(crate::BuiltIn::Barycentric { .. })) => {
-                            if has_varyings {
-                                writeln!(
-                                    self.out,
-                                    "{}const auto {} = {}.{};",
-                                    back::INDENT,
-                                    arg_name,
-                                    varyings_member_name,
-                                    arg_name
-                                )?;
-                            }
+                        | Some(crate::Binding::BuiltIn(crate::BuiltIn::Barycentric { .. }))
+                            if has_varyings =>
+                        {
+                            writeln!(
+                                self.out,
+                                "{}const auto {} = {}.{};",
+                                back::INDENT,
+                                arg_name,
+                                varyings_member_name,
+                                arg_name
+                            )?;
                         }
                         _ => {}
                     },
@@ -8394,10 +8391,10 @@ mod workgroup_mem_init {
         ) -> Result<(), core::fmt::Error> {
             match *self {
                 Access::GlobalVariable(handle) => {
-                    write!(writer, "{}", &names[&NameKey::GlobalVariable(handle)])
+                    write!(writer, "{}", names[&NameKey::GlobalVariable(handle)])
                 }
                 Access::StructMember(handle, index) => {
-                    write!(writer, ".{}", &names[&NameKey::StructMember(handle, index)])
+                    write!(writer, ".{}", names[&NameKey::StructMember(handle, index)])
                 }
                 Access::Array(depth) => write!(writer, ".{WRAPPED_ARRAY_FIELD}[__i{depth}]"),
             }

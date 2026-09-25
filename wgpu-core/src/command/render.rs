@@ -3709,8 +3709,10 @@ impl RenderPass {
         base.commands.push(ArcRenderCommand::SetImmediate {
             offset,
             data: data
-                .chunks_exact(size_of::<u32>())
-                .map(|ck| u32::from_le_bytes(ck.try_into().unwrap()))
+                .as_chunks::<{ size_of::<u32>() }>()
+                .0
+                .iter()
+                .map(|ck| u32::from_le_bytes(*ck))
                 .collect(),
         });
 

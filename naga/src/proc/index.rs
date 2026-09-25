@@ -263,18 +263,16 @@ pub fn find_checked_indexes(
                     sample,
                     level,
                     ..
-                } => {
-                    if policies.image_load == BoundsCheckPolicy::ReadZeroSkipWrite {
-                        guarded_indices.insert(coordinate);
-                        if let Some(array_index) = array_index {
-                            guarded_indices.insert(array_index);
-                        }
-                        if let Some(sample) = sample {
-                            guarded_indices.insert(sample);
-                        }
-                        if let Some(level) = level {
-                            guarded_indices.insert(level);
-                        }
+                } if policies.image_load == BoundsCheckPolicy::ReadZeroSkipWrite => {
+                    guarded_indices.insert(coordinate);
+                    if let Some(array_index) = array_index {
+                        guarded_indices.insert(array_index);
+                    }
+                    if let Some(sample) = sample {
+                        guarded_indices.insert(sample);
+                    }
+                    if let Some(level) = level {
+                        guarded_indices.insert(level);
                     }
                 }
                 _ => {}

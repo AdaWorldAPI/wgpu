@@ -61,12 +61,9 @@ mod test {
     #[test]
     fn directive_after_global_decl() {
         for unsupported_shader in DirectiveKind::iter() {
-            let directive;
-            let expected_msg;
-            match unsupported_shader {
+            let (directive, expected_msg) = match unsupported_shader {
                 DirectiveKind::Diagnostic => {
-                    directive = "diagnostic(off,derivative_uniformity)";
-                    expected_msg = "\
+                    ("diagnostic(off,derivative_uniformity)", "\
 error: expected global declaration, but found a global directive
   ┌─ wgsl:2:1
   │
@@ -75,11 +72,10 @@ error: expected global declaration, but found a global directive
   │
   = note: global directives are only allowed before global declarations; maybe hoist this closer to the top of the shader module?
 
-";
+")
                 }
                 DirectiveKind::Enable => {
-                    directive = "enable f16";
-                    expected_msg = "\
+                    ("enable f16", "\
 error: expected global declaration, but found a global directive
   ┌─ wgsl:2:1
   │
@@ -88,11 +84,10 @@ error: expected global declaration, but found a global directive
   │
   = note: global directives are only allowed before global declarations; maybe hoist this closer to the top of the shader module?
 
-";
+")
                 }
                 DirectiveKind::Requires => {
-                    directive = "requires readonly_and_readwrite_storage_textures";
-                    expected_msg = "\
+                    ("requires readonly_and_readwrite_storage_textures", "\
 error: expected global declaration, but found a global directive
   ┌─ wgsl:2:1
   │
@@ -101,9 +96,9 @@ error: expected global declaration, but found a global directive
   │
   = note: global directives are only allowed before global declarations; maybe hoist this closer to the top of the shader module?
 
-";
+")
                 }
-            }
+            };
 
             let shader = format!(
                 "\
